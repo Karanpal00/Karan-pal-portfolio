@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { animate, stagger } from 'animejs';
@@ -10,27 +10,72 @@ import {
   SiPython, SiCplusplus, SiPandas, SiScikitlearn, SiNumpy, SiGnubash 
 } from 'react-icons/si';
 import { FaDatabase } from 'react-icons/fa';
+import { HiMenuAlt4, HiX } from 'react-icons/hi';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Navbar = ({ onHover }) => (
-  <nav className="fixed top-0 left-0 right-0 p-8 md:px-12 flex justify-between items-center z-[100] mix-blend-difference">
-    <div className="font-syncopate font-bold text-2xl tracking-widest">KP</div>
-    <div className="flex gap-8 font-inter text-sm uppercase tracking-wider">
-      {['work', 'expertise', 'projects', 'contact'].map(id => (
-        <a 
-          key={id} 
-          href={`#${id}`} 
-          className="hover:text-accent transition-colors" 
-          onMouseEnter={() => onHover(true)} 
-          onMouseLeave={() => onHover(false)}
+const Navbar = ({ onHover }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const links = ['work', 'expertise', 'projects', 'contact'];
+
+  return (
+    <>
+      <nav className="fixed top-0 left-0 right-0 p-6 md:p-12 flex justify-between items-center z-[100] mix-blend-difference">
+        <div className="font-syncopate font-bold text-2xl tracking-widest">KP</div>
+        
+        {/* Desktop Links */}
+        <div className="hidden md:flex gap-8 font-inter text-sm uppercase tracking-wider">
+          {links.map(id => (
+            <a 
+              key={id} 
+              href={`#${id}`} 
+              className="hover:text-accent transition-colors" 
+              onMouseEnter={() => onHover(true)} 
+              onMouseLeave={() => onHover(false)}
+            >
+              {id}
+            </a>
+          ))}
+        </div>
+
+        {/* Mobile Toggle */}
+        <button 
+          className="md:hidden text-white text-3xl focus:outline-none"
+          onClick={() => setIsOpen(!isOpen)}
         >
-          {id}
-        </a>
-      ))}
-    </div>
-  </nav>
-);
+          {isOpen ? <HiX /> : <HiMenuAlt4 />}
+        </button>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 bg-black/95 z-[90] flex flex-col items-center justify-center gap-8 md:hidden"
+          >
+            {links.map((id, i) => (
+              <motion.a
+                key={id}
+                href={`#${id}`}
+                onClick={() => setIsOpen(false)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="font-syncopate text-3xl font-bold tracking-widest text-white hover:text-accent uppercase"
+              >
+                {id}
+              </motion.a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
 
 const SkillBadge = ({ Icon, label, color }) => (
   <span className="flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 bg-white/5 font-inter text-sm group-hover:border-white/20 transition-colors">
@@ -86,7 +131,7 @@ export default function App() {
   return (
     <div className="font-outfit text-white selection:bg-accent selection:text-black overflow-x-hidden min-h-screen">
       <motion.div 
-        className={`fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference rounded-full bg-accent transition-all duration-300 ease-out ${isHovered ? 'w-20 h-20 bg-white' : 'w-4 h-4'}`}
+        className={`fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference rounded-full bg-accent transition-all duration-300 ease-out flex items-center justify-center ${isHovered ? 'w-20 h-20 bg-white' : 'w-4 h-4'}`}
         animate={{ x: mouse.x, y: mouse.y }}
         style={{ transform: 'translate(-50%, -50%)' }}
       />
@@ -98,7 +143,7 @@ export default function App() {
 
       <Navbar onHover={setIsHovered} />
 
-      <main className="max-w-[1400px] mx-auto px-6 md:px-12">
+      <main className="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
         <section className="min-h-screen flex flex-col justify-center items-start relative z-10 py-32">
           <HeroModel />
           {['KARAN', 'PAL'].map((word, i) => (

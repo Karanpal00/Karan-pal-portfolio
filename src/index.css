@@ -16,16 +16,19 @@ body {
   color: white;
   margin: 0;
   padding: 0;
+  user-select: none;
 }
 
 .hero-model-container {
-  position: absolute;
-  right: 0;
-  top: 10%;
-  width: 50vw;
-  height: 80vh;
-  z-index: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 20;
   pointer-events: none;
-  opacity: 0.8;
-  mix-blend-mode: screen;
+}
+
+.hero-model-container canvas {
+  pointer-events: auto;
 }

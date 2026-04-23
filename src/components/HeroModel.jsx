@@ -1,42 +1,171 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, MeshDistortMaterial, Sphere } from '@react-three/drei';
+import React, { useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { 
+  MeshDistortMaterial, 
+  MeshTransmissionMaterial, 
+  Environment, 
+  ContactShadows,
+  PerspectiveCamera,
+  Float
+} from '@react-three/drei';
+import { Physics, useSphere, usePointToPointConstraint } from '@react-three/cannon';
+import * as THREE from 'three';
 
-function AnimatedSphere() {
-  const meshRef = useRef();
+function DraggableSphere({ position, size = 1, color, transmission = false, distort = 0.3, geometry }) {
+  const { mouse, viewport } = useThree();
+  const [hovered, setHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  useFrame((state) => {
-    meshRef.current.rotation.x = state.clock.getElapsedTime() * 0.2;
-    meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3;
+  // 1. Physics Body
+  const [ref, api] = useSphere(() => ({
+    mass: 1,
+    position,
+    args: [size],
+    linearDamping: 0.95,
+    angularDamping: 0.95,
+  }));
+
+  // Track position for dragging
+  const pos = useRef(position);
+  useEffect(() => {
+    const unsubscribe = api.position.subscribe((p) => (pos.current = p));
+    return unsubscribe;
+  }, [api]);
+
+  useFrame(() => {
+    // Bounds check to respawn items thrown off-screen
+    const boundX = viewport.width;
+    const boundY = viewport.height;
+    
+    if (
+      Math.abs(pos.current[0]) > boundX || 
+      Math.abs(pos.current[1]) > boundY || 
+      Math.abs(pos.current[2]) > 10
+    ) {
+      api.position.set(position[0], position[1], position[2]);
+      api.velocity.set(0, 0, 0);
+      api.angularVelocity.set(0, 0, 0);
+    }
+
+    if (isDragging) {
+      const targetX = (mouse.x * viewport.width) / 2;
+      const targetY = (mouse.y * viewport.height) / 2;
+      
+      const dx = targetX - pos.current[0];
+      const dy = targetY - pos.current[1];
+      const dz = 0 - pos.current[2];
+      
+      api.velocity.set(dx * 10, dy * 10, dz * 10);
+    } else {
+      api.applyForce([Math.sin(Date.now() * 0.001) * 0.5, Math.cos(Date.now() * 0.001) * 0.5, 0], [0, 0, 0]);
+    }
   });
 
   return (
-    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-      <Sphere ref={meshRef} args={[1, 64, 64]} scale={2}>
-        <MeshDistortMaterial
-          color="#4facfe"
-          attach="material"
-          distort={0.6}
-          speed={2}
-          roughness={0.2}
-          metalness={0.8}
+    <mesh
+      ref={ref}
+      onPointerDown={(e) => { e.stopPropagation(); setIsDragging(true); e.target.setPointerCapture(e.pointerId); }}
+      onPointerUp={(e) => { setIsDragging(false); e.target.releasePointerCapture(e.pointerId); }}
+      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'grab'; }}
+      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+    >
+      {geometry || <sphereGeometry args={[size, 32, 32]} />}
+      {transmission ? (
+        <MeshTransmissionMaterial
+          backside
+          samples={4}
+          thickness={0.5}
+          chromaticAberration={0.05}
+          anisotropy={0.1}
+          distortion={0.2}
+          color={color}
           transparent
           opacity={0.8}
-          wireframe={true}
         />
-      </Sphere>
-    </Float>
+      ) : (
+        <MeshDistortMaterial
+          color={color}
+          speed={2}
+          distort={distort}
+          radius={1}
+          roughness={0.2}
+          metalness={0.8}
+        />
+      )}
+    </mesh>
+  );
+}
+
+function Scene() {
+  const { viewport } = useThree();
+  const isMobile = viewport.width < 5;
+  
+  // Responsive positions
+  const getPos = (x, y, z) => isMobile ? [x * 0.4, y * 0.4, z] : [x, y, z];
+
+  return (
+    <>
+      <Physics gravity={[0, 0, 0]} iterations={10}>
+        {/* Central Node */}
+        <DraggableSphere 
+          position={getPos(0, 0, 0)} 
+          size={isMobile ? 1 : 1.5} 
+          transmission 
+          color="#ffffff" 
+          geometry={<icosahedronGeometry args={[isMobile ? 1 : 1.5, 15]} />}
+        />
+        
+        {/* Torus */}
+        <DraggableSphere 
+          position={getPos(-4, 3, 0)} 
+          size={0.8} 
+          color="#4facfe" 
+          distort={0.4}
+          geometry={<torusGeometry args={[0.6, 0.2, 16, 32]} />}
+        />
+        
+        {/* Octahedron */}
+        <DraggableSphere 
+          position={getPos(5, -2, 0)} 
+          size={0.8} 
+          color="#00f2fe" 
+          distort={0.3}
+          geometry={<octahedronGeometry args={[0.8]} />}
+        />
+
+        {/* Floating Sphere */}
+        <DraggableSphere 
+          position={getPos(-5, -3, 0)} 
+          size={0.6} 
+          color="#ffffff" 
+          distort={0.5}
+        />
+
+        {/* Small Node */}
+        <DraggableSphere 
+          position={getPos(4, 4, 0)} 
+          size={0.5} 
+          color="#4facfe" 
+          distort={0.2}
+          geometry={<icosahedronGeometry args={[0.5, 2]} />}
+        />
+      </Physics>
+      
+      <Environment preset="city" />
+      <ContactShadows position={[0, -5, 0]} opacity={0.3} scale={30} blur={3} far={10} />
+    </>
   );
 }
 
 export default function HeroModel() {
   return (
     <div className="hero-model-container">
-      <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 10]} intensity={2} color="#00f2fe" />
-        <directionalLight position={[-10, -10, -10]} intensity={1} color="#4facfe" />
-        <AnimatedSphere />
+      <Canvas shadows dpr={[1, 2]} gl={{ alpha: true }}>
+        <PerspectiveCamera makeDefault position={[0, 0, 12]} fov={50} />
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 10, 10]} intensity={2} />
+        <pointLight position={[-10, -10, -10]} intensity={1.5} color="#4facfe" />
+        <Scene />
       </Canvas>
     </div>
   );
