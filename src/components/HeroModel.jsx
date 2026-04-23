@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { 
-  MeshDistortMaterial, 
-  MeshTransmissionMaterial, 
-  Environment, 
+import {
+  MeshDistortMaterial,
+  MeshTransmissionMaterial,
+  Environment,
   ContactShadows,
   PerspectiveCamera,
   Float
@@ -45,17 +45,17 @@ function DraggableSphere({ position, size = 1, color, transmission = false, dist
     // Bounds check to respawn items thrown off-screen
     const boundX = viewport.width / 2 + size;
     const boundY = viewport.height / 2 + size;
-    
-    const isOut = Math.abs(pos.current[0]) > boundX || 
-                  Math.abs(pos.current[1]) > boundY || 
-                  pos.current[2] > 10 || pos.current[2] < -25;
+
+    const isOut = Math.abs(pos.current[0]) > boundX ||
+      Math.abs(pos.current[1]) > boundY ||
+      pos.current[2] > 10 || pos.current[2] < -25;
 
     if (isOut && !isDragging) {
       outOfBoundsTime.current += delta;
       if (outOfBoundsTime.current > 2) {
         // Dramatic Respawn: Shoot in from deep space
         api.position.set(position[0] + (Math.random() * 4 - 2), position[1] + (Math.random() * 4 - 2), -20);
-        api.velocity.set(Math.random() * 10 - 5, Math.random() * 10 - 5, 60); 
+        api.velocity.set(Math.random() * 10 - 5, Math.random() * 10 - 5, 60);
         api.angularVelocity.set(Math.random() * 20, Math.random() * 20, Math.random() * 20);
         scale.current = 0;
         outOfBoundsTime.current = 0;
@@ -67,11 +67,11 @@ function DraggableSphere({ position, size = 1, color, transmission = false, dist
     if (isDragging) {
       const targetX = (mouse.x * viewport.width) / 2;
       const targetY = (mouse.y * viewport.height) / 2;
-      
+
       const dx = targetX - pos.current[0];
       const dy = targetY - pos.current[1];
       const dz = 0 - pos.current[2];
-      
+
       api.velocity.set(dx * 10, dy * 10, dz * 10);
     } else {
       api.applyForce([Math.sin(Date.now() * 0.001) * 0.5, Math.cos(Date.now() * 0.001) * 0.5, 0], [0, 0, 0]);
@@ -116,7 +116,7 @@ function DraggableSphere({ position, size = 1, color, transmission = false, dist
 function Scene() {
   const { viewport } = useThree();
   const isMobile = viewport.width < 5;
-  
+
   // Responsive positions
   const getPos = (x, y, z) => isMobile ? [x * 0.4, y * 0.4, z] : [x, y, z];
 
@@ -124,50 +124,50 @@ function Scene() {
     <>
       <Physics gravity={[0, 0, 0]} iterations={10}>
         {/* Central Node */}
-        <DraggableSphere 
-          position={getPos(0, 0, 0)} 
-          size={isMobile ? 1 : 1.5} 
-          transmission 
-          color="#ffffff" 
+        <DraggableSphere
+          position={getPos(0, 0, 0)}
+          size={isMobile ? 1 : 1.5}
+          transmission
+          color="#ffffff"
           geometry={<icosahedronGeometry args={[isMobile ? 1 : 1.5, 15]} />}
         />
-        
+
         {/* Torus */}
-        <DraggableSphere 
-          position={getPos(-4, 3, 0)} 
-          size={0.8} 
-          color="#4facfe" 
+        <DraggableSphere
+          position={getPos(-4, 3, 0)}
+          size={0.8}
+          color="#4facfe"
           distort={0.4}
           geometry={<torusGeometry args={[0.6, 0.2, 16, 32]} />}
         />
-        
+
         {/* Octahedron */}
-        <DraggableSphere 
-          position={getPos(5, -2, 0)} 
-          size={0.8} 
-          color="#00f2fe" 
+        <DraggableSphere
+          position={getPos(5, -2, 0)}
+          size={0.8}
+          color="#00f2fe"
           distort={0.3}
           geometry={<octahedronGeometry args={[0.8]} />}
         />
 
         {/* Floating Sphere */}
-        <DraggableSphere 
-          position={getPos(-5, -3, 0)} 
-          size={0.6} 
-          color="#ffffff" 
+        <DraggableSphere
+          position={getPos(-5, -3, 0)}
+          size={0.6}
+          color="#ffffff"
           distort={0.5}
         />
 
         {/* Small Node */}
-        <DraggableSphere 
-          position={getPos(4, 4, 0)} 
-          size={0.5} 
-          color="#4facfe" 
+        <DraggableSphere
+          position={getPos(4, 4, 0)}
+          size={0.5}
+          color="#4facfe"
           distort={0.2}
           geometry={<icosahedronGeometry args={[0.5, 2]} />}
         />
       </Physics>
-      
+
       <Environment preset="city" />
       <ContactShadows position={[0, -5, 0]} opacity={0.3} scale={30} blur={3} far={10} />
     </>

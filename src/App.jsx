@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { animate, stagger } from 'animejs';
 import WavePrism from './components/WavePrism';
 import HeroModel from './components/HeroModel';
-import { 
-  SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiNodedotjs, SiWordpress, 
-  SiPython, SiCplusplus, SiPandas, SiScikitlearn, SiNumpy, SiGnubash 
+import {
+  SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiNodedotjs, SiWordpress,
+  SiPython, SiCplusplus, SiPandas, SiScikitlearn, SiNumpy, SiGnubash
 } from 'react-icons/si';
 import { FaDatabase } from 'react-icons/fa';
 import { HiMenuAlt4, HiX } from 'react-icons/hi';
@@ -22,15 +22,15 @@ const Navbar = ({ onHover }) => {
     <>
       <nav className="fixed top-0 left-0 right-0 p-6 md:p-12 flex justify-between items-center z-[100] mix-blend-difference">
         <div className="font-syncopate font-bold text-2xl tracking-widest">KP</div>
-        
+
         {/* Desktop Links */}
         <div className="hidden md:flex gap-8 font-inter text-sm uppercase tracking-wider">
           {links.map(id => (
-            <a 
-              key={id} 
-              href={`#${id}`} 
-              className="hover:text-accent transition-colors" 
-              onMouseEnter={() => onHover(true)} 
+            <a
+              key={id}
+              href={`#${id}`}
+              className="hover:text-accent transition-colors"
+              onMouseEnter={() => onHover(true)}
               onMouseLeave={() => onHover(false)}
             >
               {id}
@@ -39,7 +39,7 @@ const Navbar = ({ onHover }) => {
         </div>
 
         {/* Mobile Toggle */}
-        <button 
+        <button
           className="md:hidden text-white text-3xl focus:outline-none"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -50,7 +50,7 @@ const Navbar = ({ onHover }) => {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
@@ -84,14 +84,70 @@ const SkillBadge = ({ Icon, label, color }) => (
 );
 
 export default function App() {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+  const springConfig = { damping: 25, stiffness: 400, mass: 0.5 };
+  const cursorXSpring = useSpring(cursorX, springConfig);
+  const cursorYSpring = useSpring(cursorY, springConfig);
+
   const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPointerDown, setIsPointerDown] = useState(false);
   const textRef = useRef(null);
 
   useEffect(() => {
-    const handleMouse = (e) => setMouse({ x: e.clientX, y: e.clientY });
-    window.addEventListener('mousemove', handleMouse);
+    const moveCursor = (x, y) => {
+      cursorX.set(x);
+      cursorY.set(y);
+      if (!isVisible) setIsVisible(true);
+    };
 
+    const handleMouseMove = (e) => moveCursor(e.clientX, e.clientY);
+    const handleTouchMove = (e) => {
+      if (e.touches.length > 0) {
+        moveCursor(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+    const handleTouchEnd = () => {
+      setIsVisible(false);
+      setIsPointerDown(false);
+    };
+    const handleMouseLeave = () => {
+      setIsVisible(false);
+      setIsPointerDown(false);
+    };
+
+    const handlePointerDown = () => setIsPointerDown(true);
+    const handlePointerUp = () => setIsPointerDown(false);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchstart', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchcancel', handleTouchEnd);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    
+    window.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('mouseup', handlePointerUp);
+    window.addEventListener('touchstart', handlePointerDown, { passive: true });
+    window.addEventListener('touchend', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchstart', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+
+      window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('touchstart', handlePointerDown);
+      window.removeEventListener('touchend', handlePointerUp);
+    };
+  }, [cursorX, cursorY, isVisible]);
+
+  useEffect(() => {
     const headings = gsap.utils.toArray('.section-heading');
     headings.forEach((el) => {
       ScrollTrigger.create({
@@ -104,7 +160,7 @@ export default function App() {
 
     if (textRef.current) {
       const content = textRef.current.innerText;
-      textRef.current.innerHTML = content.split('').map(c => 
+      textRef.current.innerHTML = content.split('').map(c =>
         `<span class="hero-char inline-block">${c === ' ' ? '&nbsp;' : c}</span>`
       ).join('');
 
@@ -118,27 +174,45 @@ export default function App() {
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouse);
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, []);
 
   const hoverHandlers = {
     onMouseEnter: () => setIsHovered(true),
-    onMouseLeave: () => setIsHovered(false)
+    onMouseLeave: () => setIsHovered(false),
+    onTouchStart: () => setIsHovered(true),
+    onTouchEnd: () => setIsHovered(false)
+  };
+
+  const getCursorSize = () => {
+    if (isHovered) return 80;
+    if (isPointerDown) return 32;
+    return 16;
   };
 
   return (
     <div className="font-outfit text-white selection:bg-accent selection:text-black overflow-x-hidden min-h-screen">
-      <motion.div 
-        className={`fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference rounded-full bg-accent transition-all duration-300 ease-out flex items-center justify-center ${isHovered ? 'w-20 h-20 bg-white' : 'w-4 h-4'}`}
-        animate={{ x: mouse.x, y: mouse.y }}
-        style={{ transform: 'translate(-50%, -50%)' }}
+      <motion.div
+        className="fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference rounded-full flex items-center justify-center"
+        style={{
+          x: cursorXSpring,
+          y: cursorYSpring,
+          translateX: '-50%',
+          translateY: '-50%'
+        }}
+        animate={{
+          width: getCursorSize(),
+          height: getCursorSize(),
+          opacity: isVisible ? 1 : 0,
+          backgroundColor: isHovered ? '#ffffff' : 'var(--color-accent)'
+        }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       />
-      
-      <WavePrism 
-        speed={0.15} beamThickness={0.3} distortion={0.4} 
-        xScale={0.4} yScale={0.4} glow={1.2} backgroundColor="#030303" 
+
+      <WavePrism
+        speed={0.15} beamThickness={0.3} distortion={0.4}
+        xScale={0.4} yScale={0.4} glow={1.2} backgroundColor="#030303"
       />
 
       <Navbar onHover={setIsHovered} />
@@ -147,7 +221,7 @@ export default function App() {
         <section className="min-h-screen flex flex-col justify-center items-start relative z-10 py-32">
           <HeroModel />
           {['KARAN', 'PAL'].map((word, i) => (
-            <motion.div 
+            <motion.div
               key={word}
               className="overflow-hidden"
               initial={{ y: 100, opacity: 0 }}
@@ -168,7 +242,7 @@ export default function App() {
           <h2 className="section-heading font-syncopate font-bold text-4xl md:text-7xl mb-16 text-transparent transition-all duration-500 uppercase" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.4)' }}>
             Experience
           </h2>
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 py-16 border-t border-white/10 border-b group"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -202,7 +276,7 @@ export default function App() {
             Expertise
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[minmax(250px,auto)]">
-            <motion.div 
+            <motion.div
               className="md:col-span-8 bg-white/5 border border-white/5 rounded-[2rem] p-12 backdrop-blur-xl flex flex-col justify-between group hover:bg-white/10 hover:border-white/15 transition-all duration-500"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -225,7 +299,7 @@ export default function App() {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="md:col-span-4 md:row-span-2 bg-accent/5 border border-accent/20 rounded-[2rem] p-12 backdrop-blur-xl flex flex-col justify-between group hover:bg-accent/10 transition-all duration-500"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -242,7 +316,7 @@ export default function App() {
               </a>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="md:col-span-4 bg-white/5 border border-white/5 rounded-[2rem] p-10 backdrop-blur-xl flex flex-col justify-between group hover:bg-white/10 transition-all duration-500"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -258,7 +332,7 @@ export default function App() {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="md:col-span-4 bg-white/5 border border-white/5 rounded-[2rem] p-10 backdrop-blur-xl flex flex-col justify-between group hover:bg-white/10 transition-all duration-500"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -287,7 +361,7 @@ export default function App() {
               { title: 'Restaurant Page', desc: 'Dynamic single-page restaurant application built with vanilla JavaScript, featuring modular component architecture and dynamic DOM generation.', tech: 'JavaScript', link: 'https://github.com/Karanpal00/restaurant-page' },
               { title: 'Tic-Tac-Toe Engine', desc: 'Interactive Tic-Tac-Toe game leveraging vanilla JavaScript for game state management, logic handling, and DOM rendering.', tech: 'JavaScript', link: 'https://github.com/Karanpal00/tic-tac-toe' }
             ].map((proj) => (
-              <motion.div 
+              <motion.div
                 key={proj.title}
                 className="flex flex-col md:flex-row justify-between items-start md:items-center py-16 border-b border-white/10 cursor-pointer relative group transition-all duration-500"
                 initial={{ opacity: 0 }}
@@ -308,7 +382,7 @@ export default function App() {
         </section>
 
         <section id="contact" className="min-h-screen flex flex-col justify-center items-center text-center relative z-10 py-32 overflow-hidden">
-          <motion.h2 
+          <motion.h2
             className="font-syncopate font-black text-6xl md:text-[15vw] leading-none text-transparent mb-16 cursor-pointer hover:text-white transition-all duration-500"
             style={{ WebkitTextStroke: '1px rgba(255,255,255,0.2)' }}
             initial={{ scale: 0.8, opacity: 0 }}
@@ -321,12 +395,12 @@ export default function App() {
           </motion.h2>
           <div className="flex flex-wrap justify-center gap-10 font-syncopate text-xl uppercase tracking-widest">
             {['EMAIL', 'GITHUB', 'PHONE'].map((label) => (
-              <a 
-                key={label} 
-                href={label === 'EMAIL' ? 'mailto:karanpal9901@gmail.com' : label === 'GITHUB' ? 'https://github.com/Karanpal00' : 'tel:+919110363198'} 
-                target={label !== 'PHONE' ? "_blank" : undefined} 
-                rel="noreferrer" 
-                className="relative group p-4 overflow-hidden" 
+              <a
+                key={label}
+                href={label === 'EMAIL' ? 'mailto:karanpal9901@gmail.com' : label === 'GITHUB' ? 'https://github.com/Karanpal00' : 'tel:+919110363198'}
+                target={label !== 'PHONE' ? "_blank" : undefined}
+                rel="noreferrer"
+                className="relative group p-4 overflow-hidden"
                 {...hoverHandlers}
               >
                 <span className="relative z-10">{label}</span>
