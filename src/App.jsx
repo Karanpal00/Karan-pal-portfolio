@@ -397,11 +397,11 @@ export default function App() {
             LET'S TALK
           </motion.h2>
           <div className="flex flex-wrap justify-center gap-10 font-syncopate text-xl uppercase tracking-widest">
-            {['EMAIL', 'GITHUB', 'PHONE'].map((label) => (
+            {['EMAIL', 'GITHUB'].map((label) => (
               <a
                 key={label}
-                href={label === 'EMAIL' ? 'mailto:karan.pal.2204@gmail.com' : label === 'GITHUB' ? 'https://github.com/Karanpal00' : 'tel:+919110363198'}
-                target={label !== 'PHONE' ? "_blank" : undefined}
+                href={label === 'EMAIL' ? 'mailto:karan.pal.2204@gmail.com' : 'https://github.com/Karanpal00'}
+                target="_blank"
                 rel="noreferrer"
                 className="relative group p-4 overflow-hidden"
                 {...hoverHandlers}
