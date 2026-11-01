@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { animate, stagger } from 'animejs';
 import WavePrism from './components/WavePrism';
-import HeroModel from './components/HeroModel';
+const HeroModel = lazy(() => import('./components/HeroModel'));
 import {
   SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiNodedotjs, SiWordpress,
   SiPython, SiCplusplus, SiPandas, SiScikitlearn, SiNumpy, SiGnubash
@@ -219,7 +219,9 @@ export default function App() {
 
       <main className="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
         <section className="min-h-screen flex flex-col justify-center items-start relative z-10 py-32">
-          <HeroModel />
+          <Suspense fallback={null}>
+            <HeroModel />
+          </Suspense>
           {['KARAN', 'PAL'].map((word, i) => (
             <motion.div
               key={word}
@@ -357,6 +359,7 @@ export default function App() {
           <div className="flex flex-col">
             {[
               { title: 'ADNET Web & CMS', desc: 'Architected the corporate site and headless CMS leveraging WordPress, optimizing performance and establishing a robust content management pipeline.', tech: 'React / Vite / WP', link: 'https://adnet.co.in' },
+              { title: 'MCQ Exam System', desc: 'Offline-first exam platform with bulk question import (10,000 questions in ~35 ms), a refresh-safe timed exam engine, multi-device cloud sync and a performance analytics dashboard. Scores 100/100 on desktop Lighthouse Performance.', tech: 'React / TypeScript / PWA', link: 'https://github.com/Karanpal00/mcq-exam-system' },
               { title: 'Admin Dashboard', desc: 'Responsive admin dashboard interface developed utilizing advanced CSS Grid architectures and semantic HTML, ensuring fluid layout adaptivity.', tech: 'HTML / CSS', link: 'https://github.com/Karanpal00/Admin-dashboard' },
               { title: 'Restaurant Page', desc: 'Dynamic single-page restaurant application built with vanilla JavaScript, featuring modular component architecture and dynamic DOM generation.', tech: 'JavaScript', link: 'https://github.com/Karanpal00/restaurant-page' },
               { title: 'Tic-Tac-Toe Engine', desc: 'Interactive Tic-Tac-Toe game leveraging vanilla JavaScript for game state management, logic handling, and DOM rendering.', tech: 'JavaScript', link: 'https://github.com/Karanpal00/tic-tac-toe' }
@@ -397,7 +400,7 @@ export default function App() {
             {['EMAIL', 'GITHUB', 'PHONE'].map((label) => (
               <a
                 key={label}
-                href={label === 'EMAIL' ? 'mailto:karanpal9901@gmail.com' : label === 'GITHUB' ? 'https://github.com/Karanpal00' : 'tel:+919110363198'}
+                href={label === 'EMAIL' ? 'mailto:karan.pal.2204@gmail.com' : label === 'GITHUB' ? 'https://github.com/Karanpal00' : 'tel:+919110363198'}
                 target={label !== 'PHONE' ? "_blank" : undefined}
                 rel="noreferrer"
                 className="relative group p-4 overflow-hidden"
