@@ -1,19 +1,17 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   MeshDistortMaterial,
   MeshTransmissionMaterial,
   Environment,
   ContactShadows,
-  PerspectiveCamera,
-  Float
+  PerspectiveCamera
 } from '@react-three/drei';
-import { Physics, useSphere, usePointToPointConstraint } from '@react-three/cannon';
+import { Physics, useSphere } from '@react-three/cannon';
 import * as THREE from 'three';
 
 function DraggableSphere({ position, size = 1, color, transmission = false, distort = 0.3, geometry }) {
   const { mouse, viewport } = useThree();
-  const [hovered, setHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   // 1. Physics Body
@@ -83,8 +81,8 @@ function DraggableSphere({ position, size = 1, color, transmission = false, dist
       ref={ref}
       onPointerDown={(e) => { e.stopPropagation(); setIsDragging(true); e.target.setPointerCapture(e.pointerId); }}
       onPointerUp={(e) => { setIsDragging(false); e.target.releasePointerCapture(e.pointerId); }}
-      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'grab'; }}
-      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+      onPointerOver={() => { document.body.style.cursor = 'grab'; }}
+      onPointerOut={() => { document.body.style.cursor = 'auto'; }}
     >
       {geometry || <sphereGeometry args={[size, 32, 32]} />}
       {transmission ? (
