@@ -1,16 +1,39 @@
-# React + Vite
+# Karan Pal — Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive 3D developer portfolio with a physics-driven hero and a real-time shader background.
 
-Currently, two official plugins are available:
+**Live:** https://karan-pal.onrender.com/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Highlights
 
-## React Compiler
+- **Physics hero:** 5 draggable 3D objects with collisions that respawn if thrown off-screen
+- **Custom shader background:** real-time wave prism with chromatic aberration
+- **Motion:** scroll-triggered reveals, spring-physics cursor and staggered text animation
+- **Responsive:** touch support, mobile navigation overlay and scaled 3D layout on small screens
+- **Fast first paint:** the 3D hero is lazy-loaded, so the page content renders before the 3D code arrives
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Sections
 
-## Expanding the ESLint configuration
+Experience · Expertise · Selected Works · Contact
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+
+React 19, Vite, Tailwind CSS, Three.js, React Three Fiber, Cannon, GLSL, GSAP, Framer Motion, Anime.js
+
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+npm run lint
+```
+
+## Contact
+
+[karan.pal.2204@gmail.com](mailto:karan.pal.2204@gmail.com) · [GitHub](https://github.com/Karanpal00)
